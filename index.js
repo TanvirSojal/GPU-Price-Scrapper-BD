@@ -13,31 +13,52 @@ class GpuDataProvider {
         const page = await browser.newPage();
         page.setViewport({ width: 1920, height: 1080 });
 
-        await page.goto(URLs.StarTech);
+        let URL = URLs.StarTech;
 
-        const gpus = await page.evaluate(() => {
-            const elementNodeList =
-                document.querySelectorAll('.product-layout');
-            const elements = [...elementNodeList];
-            return elements.map((element) => {
-                const name = element.querySelector('.p-item-name').innerText;
+        const gpus = [];
 
-                let price = element.querySelector('.price-new');
-                if (price == null) {
-                    price = element.querySelector('.p-item-price');
-                }
-                price = price.innerText.replace(/[^0-9.]/g, '');
-                price = parseFloat(price);
+        while (URL) {
+            await page.goto(URL);
 
-                const shop = 'StarTech';
+            const gpusFromPage = await page.evaluate(() => {
+                const elementNodeList = document.querySelectorAll('.p-item');
+                const elements = [...elementNodeList];
+                return elements.map((element) => {
+                    const name =
+                        element.querySelector('.p-item-name').innerText;
 
-                const url = element
-                    .querySelector('.p-item-name')
-                    .getElementsByTagName('a')[0].href;
+                    let price = element.querySelector('.price-new');
+                    if (price == null) {
+                        price = element.querySelector('.p-item-price');
+                    }
+                    price = price.innerText.replace(/[^0-9.]/g, '');
+                    price = parseFloat(price);
 
-                return { name, price, shop, url };
+                    const shop = 'StarTech';
+
+                    const url = element
+                        .querySelector('.p-item-name')
+                        .getElementsByTagName('a')[0].href;
+
+                    return { name, price, shop, url };
+                });
             });
-        });
+
+            gpus.push(...gpusFromPage);
+
+            const nextPageUrl = await page.evaluate(() => {
+                const pagination = document.querySelector('.pagination');
+                const nextButton = pagination.lastChild;
+
+                const isActive = nextButton.querySelector('.disabled') == null;
+
+                return isActive
+                    ? nextButton.getElementsByTagName('a')[0].href
+                    : false;
+            });
+
+            URL = nextPageUrl;
+        }
 
         await browser.close();
 
@@ -86,8 +107,9 @@ class GpuDataProvider {
     async getGpuData() {
         const gpus = [];
 
-        gpus.push(...(await this.getTechLandGPUs()));
+        //gpus.push(...(await this.getTechLandGPUs()));
 
+        gpus.push(...(await this.getStarTechGPUs()));
         //return gpus;
 
         return gpus.map((gpu) => this.getPrintString(gpu));
@@ -100,5 +122,5 @@ class GpuDataProvider {
     // console.log(printGpus);
 
     const gpuDataProvider = new GpuDataProvider();
-    console.log(await gpuDataProvider.getGpuData());
+    console.log(await (await gpuDataProvider.getGpuData()).length);
 })();
