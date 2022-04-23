@@ -1,5 +1,6 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
+const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 
 const URLs = {
     StarTech:
@@ -168,7 +169,8 @@ class GpuDataProvider {
         gpus.push(...(await this.getGPUsFromStarTech()));
         gpus.push(...(await this.getGPUsFromTechLand()));
         gpus.push(...(await this.getGPUsFromUCC()));
-        gpus.sort((gpu) => gpu.price);
+
+        gpus.sort((a, b) => a.price - b.price);
 
         return gpus;
 
@@ -177,12 +179,24 @@ class GpuDataProvider {
 }
 
 (async () => {
-    // const starTechGpus = await getStarTechGPUs();
-    // const printGpus = starTechGpus.map((gpu) => getPrintString(gpu));
-    // console.log(printGpus);
-
     const gpuDataProvider = new GpuDataProvider();
     const gpus = await gpuDataProvider.getGpuData();
 
-    console.log(gpus.length);
+    const csvWriter = createCsvWriter({
+        path: 'gpu-data.csv',
+        header: [
+            { id: 'name', title: 'Name' },
+            { id: 'price', title: 'Price (BDT)' },
+            { id: 'shop', title: 'Shop' },
+            { id: 'url', title: 'Link' },
+        ],
+    });
+
+    csvWriter
+        .writeRecords(gpus) // returns a promise
+        .then(() => {
+            console.log('...Done Writing in CSV File');
+        });
+
+    console.log(`Total ${gpus.length} GPUs Listing Found`);
 })();

@@ -4,6 +4,7 @@
     "description": "",
     "main": "index.js",
     "dependencies": {
+        "csv-writer": "^1.6.0",
         "puppeteer": "^13.6.0"
     },
     "devDependencies": {},
