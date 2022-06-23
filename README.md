@@ -1,4 +1,4 @@
-# GPU Price Trend Analyzer
+# GPU Price Scrapper BD
 
 The project is currently in a state where,
 
@@ -10,7 +10,7 @@ node index.js
 ```
 
 -   The GPU listing will be in ascending order of their price
--   Currently supported Shops are
+-   Currently supported Shops are (from Bangladesh)
     -   StarTech
     -   TechLand
     -   UCC
