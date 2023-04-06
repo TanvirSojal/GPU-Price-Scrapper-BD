@@ -3,10 +3,9 @@ const fs = require('fs');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 
 const URLs = {
-    StarTech:
-        'https://www.startech.com.bd/component/graphics-card?filter_status=7',
+    StarTech: 'https://www.startech.com.bd/component/graphics-card?filter_status=7',
     TechLand: 'https://www.techlandbd.com/graphics-card?fq=1',
-    UCC: 'https://www.ucc-bd.com/pc-components/graphics-card-gpu.html?product_list_limit=all',
+    UCC: 'https://www.ucc.com.bd/category-store/computer-components/graphics-card?fq=1',
 };
 
 class GpuDataProvider {
@@ -19,15 +18,19 @@ class GpuDataProvider {
 
         const gpus = [];
 
+        console.log('Pulling data from StarTech...')
+
+        let pageCount = 0
+
         while (URL) {
             await page.goto(URL);
+            console.log(`loaded page ${++pageCount}`)
 
             const gpusFromPage = await page.evaluate(() => {
                 const elementNodeList = document.querySelectorAll('.p-item');
                 const elements = [...elementNodeList];
                 return elements.map((element) => {
-                    const name =
-                        element.querySelector('.p-item-name').innerText;
+                    const name = element.querySelector('.p-item-name').innerText;
 
                     let price = element.querySelector('.price-new');
                     if (price == null) {
@@ -64,6 +67,8 @@ class GpuDataProvider {
 
         await browser.close();
 
+        console.log(`${gpus.length} GPU Listings Found in StarTech`)
+
         return gpus;
     }
 
@@ -76,12 +81,18 @@ class GpuDataProvider {
 
         const gpus = [];
 
+        console.log('Pulling data from TechLand...')
+
+        
+        let pageCount = 0
+
         while (URL) {
             await page.goto(URL);
 
+            console.log(`loaded page ${++pageCount}`)
+
             const gpusFromPage = await page.evaluate(() => {
-                const elementNodeList =
-                    document.querySelectorAll('.product-thumb');
+                const elementNodeList = document.querySelectorAll('.product-thumb');
                 const elements = [...elementNodeList];
                 return elements.map((element) => {
                     const name = element.querySelector('.name').innerText;
@@ -116,6 +127,8 @@ class GpuDataProvider {
 
         await browser.close();
 
+        console.log(`${gpus.length} GPU Listings Found in TechLand`)
+
         return gpus;
     }
 
@@ -125,36 +138,55 @@ class GpuDataProvider {
         page.setViewport({ width: 1920, height: 1080 });
 
         let URL = URLs.UCC;
+
         const gpus = [];
 
-        await page.goto(URL);
+        console.log('Pulling data from UCC...')
 
-        const gpusFromPage = await page.evaluate(() => {
-            const elementNodeList =
-                document.querySelectorAll('.product-item-info');
-            const elements = [...elementNodeList];
-            return elements.map((element) => {
-                const name =
-                    element.querySelector('.product-item-link').innerText;
+        let pageCount = 0
 
-                let price = element.querySelector('.price-new');
-                if (price == null) {
-                    price = element.querySelector('.price');
-                }
-                price = price.innerText.replace(/[^0-9.]/g, '');
-                price = parseFloat(price);
+        while (URL) {
+            await page.goto(URL);
 
-                const shop = 'UCC';
+            console.log(`loaded page ${++pageCount}`)
 
-                const url = element.querySelector('.product-item-link').href;
+            const gpusFromPage = await page.evaluate(() => {
+                const elementNodeList = document.querySelectorAll('.product-thumb');
+                const elements = [...elementNodeList];
+                return elements.map((element) => {
+                    const name = element.querySelector('.name').innerText;
 
-                return { name, price, shop, url };
+                    let price = element.querySelector('.price-new');
+                    if (price == null) {
+                        price = element.querySelector('.price');
+                    }
+                    price = price.innerText.replace(/[^0-9.]/g, '');
+                    price = parseFloat(price);
+
+                    const shop = 'UCC';
+
+                    const url = element
+                        .querySelector('.name')
+                        .getElementsByTagName('a')[0].href;
+
+                    return { name, price, shop, url };
+                });
             });
-        });
 
-        gpus.push(...gpusFromPage);
+            gpus.push(...gpusFromPage);
+
+            const nextPageUrl = await page.evaluate(() => {
+                const pagination = document.querySelector('.pagination');
+                const nextButton = pagination.querySelector('.next');
+                return nextButton ? nextButton.href : false;
+            });
+
+            URL = nextPageUrl;
+        }
 
         await browser.close();
+
+        console.log(`${gpus.length} GPU Listings Found in UCC`)
 
         return gpus;
     }
@@ -170,11 +202,9 @@ class GpuDataProvider {
         gpus.push(...(await this.getGPUsFromTechLand()));
         gpus.push(...(await this.getGPUsFromUCC()));
 
-        gpus.sort((a, b) => a.price - b.price);
-
-        return gpus;
-
-        //return gpus.map((gpu) => this.getPrintString(gpu));
+        return gpus
+            .filter(x => x.price > 0)
+            .sort((a, b) => a.price - b.price);
     }
 }
 
@@ -195,8 +225,8 @@ class GpuDataProvider {
     csvWriter
         .writeRecords(gpus) // returns a promise
         .then(() => {
-            console.log('...Done Writing in CSV File');
+            console.log('...Done Writing in CSV File "gpu-data.csv"');
         });
 
-    console.log(`Total ${gpus.length} GPUs Listing Found`);
+    console.log(`Total ${gpus.length} GPU Listings Found`);
 })();
