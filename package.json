@@ -1,11 +1,11 @@
 {
-    "name": "gpu-prices-bd",
+    "name": "gpu-price-bd",
     "version": "1.0.0",
     "description": "Gets GPU price data from Startech, Techland and UCC, sorts them by price and outputs into a CSV file.",
     "main": "index.js",
     "scripts": {},
     "bin": {
-        "gpu-prices-bd": "./index.js"
+        "gpu-price-bd": "./index.js"
     },
     "author": "TanvirSojal",
     "repository": {
