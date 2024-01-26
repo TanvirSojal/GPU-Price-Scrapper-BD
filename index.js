@@ -133,7 +133,7 @@ class GpuDataProvider {
     }
 
     async getGPUsFromUCC() {
-        const browser = await puppeteer.launch();
+        const browser = await puppeteer.launch({ headless: 'new' });
         const page = await browser.newPage();
         page.setViewport({ width: 1920, height: 1080 });
 
@@ -213,7 +213,7 @@ class GpuDataProvider {
     const gpus = await gpuDataProvider.getGpuData();
 
     const csvWriter = createCsvWriter({
-        path: 'gpu-data.csv',
+        path: 'gpu-data-output.csv',
         header: [
             { id: 'name', title: 'Name' },
             { id: 'price', title: 'Price (BDT)' },
