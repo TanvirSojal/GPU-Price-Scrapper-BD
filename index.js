@@ -199,9 +199,26 @@ class GpuDataProvider {
     async getGpuData() {
         const gpus = [];
 
-        gpus.push(...(await this.getGPUsFromStarTech()));
-        gpus.push(...(await this.getGPUsFromTechLand()));
-        gpus.push(...(await this.getGPUsFromUCC()));
+        try{
+            gpus.push(...(await this.getGPUsFromStarTech()));
+        } 
+        catch (error){
+            console.log(error);
+        }
+
+        try{
+            gpus.push(...(await this.getGPUsFromTechLand()));
+        }
+        catch (error){
+            console.log(error);
+        }
+
+        try{
+            gpus.push(...(await this.getGPUsFromUCC()));
+        }
+        catch (error){
+            console.log(error);
+        }
 
         return gpus
             .filter(x => x.price > 0)
@@ -214,7 +231,7 @@ class GpuDataProvider {
     const gpus = await gpuDataProvider.getGpuData();
 
     const csvWriter = createCsvWriter({
-        path: 'gpu-data-output.csv',
+        path: 'gpu-data.csv',
         header: [
             { id: 'name', title: 'Name' },
             { id: 'price', title: 'Price (BDT)' },
