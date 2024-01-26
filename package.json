@@ -1,16 +1,22 @@
 {
-    "name": "gpu-price-trends",
+    "name": "gpu-prices-bd",
     "version": "1.0.0",
-    "description": "",
+    "description": "Gets GPU price data from Startech, Techland and UCC, sorts them by price and outputs into a CSV file.",
     "main": "index.js",
+    "scripts": {},
+    "bin": {
+        "gpu-prices-bd": "./index.js"
+    },
+    "author": "TanvirSojal",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/TanvirSojal/GPU-Price-Scrapper-BD.git"
+    },
+    "homepage": "https://github.com/TanvirSojal/GPU-Price-Scrapper-BD/#readme",
     "dependencies": {
         "csv-writer": "^1.6.0",
         "puppeteer": "^21.5.0"
     },
     "devDependencies": {},
-    "scripts": {
-        "start": "node index.js"
-    },
-    "author": "",
     "license": "ISC"
 }
