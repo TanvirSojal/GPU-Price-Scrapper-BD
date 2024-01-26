@@ -1,5 +1,6 @@
+#!/usr/bin/env node
+
 const puppeteer = require('puppeteer');
-const fs = require('fs');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 
 const URLs = {
@@ -10,7 +11,7 @@ const URLs = {
 
 class GpuDataProvider {
     async getGPUsFromStarTech() {
-        const browser = await puppeteer.launch();
+        const browser = await puppeteer.launch({ headless: 'new' });
         const page = await browser.newPage();
         page.setViewport({ width: 1920, height: 1080 });
 
@@ -73,7 +74,7 @@ class GpuDataProvider {
     }
 
     async getGPUsFromTechLand() {
-        const browser = await puppeteer.launch();
+        const browser = await puppeteer.launch({ headless: 'new' });
         const page = await browser.newPage();
         page.setViewport({ width: 1920, height: 1080 });
 

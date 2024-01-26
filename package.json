@@ -3,7 +3,9 @@
     "version": "1.0.0",
     "description": "Gets GPU price data from Startech, Techland and UCC, sorts them by price and outputs into a CSV file.",
     "main": "index.js",
-    "scripts": {},
+    "scripts": {
+        "scrape": "node index.js"
+    },
     "bin": {
         "gpu-price-bd": "./index.js"
     },
@@ -17,6 +19,5 @@
         "csv-writer": "^1.6.0",
         "puppeteer": "^21.5.0"
     },
-    "devDependencies": {},
     "license": "ISC"
 }
