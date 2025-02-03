@@ -1,250 +1,256 @@
 #!/usr/bin/env node
 
 const puppeteer = require('puppeteer');
+const { getBrand } = require('./library/Utility');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 
 const URLs = {
-    StarTech: 'https://www.startech.com.bd/component/graphics-card?filter_status=7',
-    TechLand: 'https://www.techlandbd.com/graphics-card?fq=1',
-    UCC: 'https://www.ucc.com.bd/category-store/computer-components/graphics-card?fq=1',
+  StarTech: 'https://www.startech.com.bd/component/graphics-card?filter_status=7',
+  TechLand: 'https://www.techlandbd.com/graphics-card?fq=1',
+  UCC: 'https://www.ucc.com.bd/category-store/computer-components/graphics-card?fq=1',
 };
 
 class GpuDataProvider {
-    async getGPUsFromStarTech() {
-        const browser = await puppeteer.launch({ headless: 'new' });
-        const page = await browser.newPage();
-        page.setViewport({ width: 1920, height: 1080 });
+  async getGPUsFromStarTech() {
+    const browser = await puppeteer.launch({ headless: 'new' });
+    const page = await browser.newPage();
+    page.setViewport({ width: 1920, height: 1080 });
 
-        let URL = URLs.StarTech;
+    let URL = URLs.StarTech;
 
-        const gpus = [];
+    const gpus = [];
 
-        console.log('Pulling data from StarTech...')
+    console.log('Pulling data from StarTech...')
 
-        let pageCount = 0
+    let pageCount = 0
 
-        while (URL) {
-            await page.goto(URL);
-            console.log(`loaded page ${++pageCount}`)
+    while (URL) {
+      await page.goto(URL);
+      console.log(`loaded page ${++pageCount}`)
 
-            const gpusFromPage = await page.evaluate(() => {
-                const elementNodeList = document.querySelectorAll('.p-item');
-                const elements = [...elementNodeList];
-                return elements.map((element) => {
-                    const name = element.querySelector('.p-item-name').innerText;
+      const gpusFromPage = await page.evaluate(() => {
+        const elementNodeList = document.querySelectorAll('.p-item');
+        const elements = [...elementNodeList];
+        return elements.map((element) => {
+          const name = element.querySelector('.p-item-name').innerText;
 
-                    let price = element.querySelector('.price-new');
-                    if (price == null) {
-                        price = element.querySelector('.p-item-price');
-                    }
-                    price = price.innerText.replace(/[^0-9.]/g, '');
-                    price = parseFloat(price);
+          let price = element.querySelector('.price-new');
+          if (price == null) {
+            price = element.querySelector('.p-item-price');
+          }
+          price = price.innerText.replace(/[^0-9.]/g, '');
+          price = parseFloat(price);
 
-                    const shop = 'StarTech';
+          const shop = 'StarTech';
 
-                    const url = element
-                        .querySelector('.p-item-name')
-                        .getElementsByTagName('a')[0].href;
+          const url = element
+            .querySelector('.p-item-name')
+            .getElementsByTagName('a')[0].href;
 
-                    return { name, price, shop, url };
-                });
-            });
+          return { name, price, shop, url };
+        });
+      });
 
-            gpus.push(...gpusFromPage);
+      gpus.push(...gpusFromPage);
 
-            const nextPageUrl = await page.evaluate(() => {
-                const pagination = document.querySelector('.pagination');
-                const nextButton = pagination.lastChild;
+      const nextPageUrl = await page.evaluate(() => {
+        const pagination = document.querySelector('.pagination');
+        const nextButton = pagination.lastChild;
 
-                const isActive = nextButton.querySelector('.disabled') == null;
+        const isActive = nextButton.querySelector('.disabled') == null;
 
-                return isActive
-                    ? nextButton.getElementsByTagName('a')[0].href
-                    : false;
-            });
+        return isActive
+          ? nextButton.getElementsByTagName('a')[0].href
+          : false;
+      });
 
-            URL = nextPageUrl;
-        }
-
-        await browser.close();
-
-        console.log(`${gpus.length} GPU Listings Found in StarTech`)
-
-        return gpus;
+      URL = nextPageUrl;
     }
 
-    async getGPUsFromTechLand() {
-        const browser = await puppeteer.launch({ headless: 'new' });
-        const page = await browser.newPage();
-        page.setViewport({ width: 1920, height: 1080 });
+    await browser.close();
 
-        let URL = URLs.TechLand;
+    console.log(`${gpus.length} GPU Listings Found in StarTech`)
 
-        const gpus = [];
+    return gpus;
+  }
 
-        console.log('Pulling data from TechLand...')
+  async getGPUsFromTechLand() {
+    const browser = await puppeteer.launch({ headless: 'new' });
+    const page = await browser.newPage();
+    page.setViewport({ width: 1920, height: 1080 });
 
-        
-        let pageCount = 0
+    let URL = URLs.TechLand;
 
-        while (URL) {
-            await page.goto(URL);
+    const gpus = [];
 
-            console.log(`loaded page ${++pageCount}`)
+    console.log('Pulling data from TechLand...')
 
-            const gpusFromPage = await page.evaluate(() => {
-                const elementNodeList = document.querySelectorAll('.product-thumb');
-                const elements = [...elementNodeList];
-                return elements.map((element) => {
-                    const name = element.querySelector('.name').innerText;
 
-                    let price = element.querySelector('.price-new');
-                    if (price == null) {
-                        price = element.querySelector('.price');
-                    }
-                    price = price.innerText.replace(/[^0-9.]/g, '');
-                    price = parseFloat(price);
+    let pageCount = 0
 
-                    const shop = 'TechLand';
+    while (URL) {
+      await page.goto(URL);
 
-                    const url = element
-                        .querySelector('.name')
-                        .getElementsByTagName('a')[0].href;
+      console.log(`loaded page ${++pageCount}`)
 
-                    return { name, price, shop, url };
-                });
-            });
+      const gpusFromPage = await page.evaluate(() => {
+        const elementNodeList = document.querySelectorAll('.product-thumb');
+        const elements = [...elementNodeList];
+        return elements.map((element) => {
+          const name = element.querySelector('.name').innerText;
 
-            gpus.push(...gpusFromPage);
+          let price = element.querySelector('.price-new');
+          if (price == null) {
+            price = element.querySelector('.price');
+          }
+          price = price.innerText.replace(/[^0-9.]/g, '');
+          price = parseFloat(price);
 
-            const nextPageUrl = await page.evaluate(() => {
-                const pagination = document.querySelector('.pagination');
-                const nextButton = pagination.querySelector('.next');
-                return nextButton ? nextButton.href : false;
-            });
+          const shop = 'TechLand';
 
-            URL = nextPageUrl;
-        }
+          const url = element
+            .querySelector('.name')
+            .getElementsByTagName('a')[0].href;
 
-        await browser.close();
+          return { name, price, shop, url };
+        });
+      });
 
-        console.log(`${gpus.length} GPU Listings Found in TechLand`)
+      gpus.push(...gpusFromPage);
 
-        return gpus;
+      const nextPageUrl = await page.evaluate(() => {
+        const pagination = document.querySelector('.pagination');
+        const nextButton = pagination.querySelector('.next');
+        return nextButton ? nextButton.href : false;
+      });
+
+      URL = nextPageUrl;
     }
 
-    async getGPUsFromUCC() {
-        const browser = await puppeteer.launch({ headless: 'new' });
-        const page = await browser.newPage();
-        page.setViewport({ width: 1920, height: 1080 });
+    await browser.close();
 
-        let URL = URLs.UCC;
+    console.log(`${gpus.length} GPU Listings Found in TechLand`)
 
-        const gpus = [];
+    return gpus;
+  }
 
-        console.log('Pulling data from UCC...')
+  async getGPUsFromUCC() {
+    const browser = await puppeteer.launch({ headless: 'new' });
+    const page = await browser.newPage();
+    page.setViewport({ width: 1920, height: 1080 });
 
-        let pageCount = 0
+    let URL = URLs.UCC;
 
-        while (URL) {
-            await page.goto(URL);
+    const gpus = [];
 
-            console.log(`loaded page ${++pageCount}`)
+    console.log('Pulling data from UCC...')
 
-            const gpusFromPage = await page.evaluate(() => {
-                const elementNodeList = document.querySelectorAll('.product-thumb');
-                const elements = [...elementNodeList];
-                return elements.map((element) => {
-                    const name = element.querySelector('.name').innerText;
+    let pageCount = 0
 
-                    let price = element.querySelector('.price-new');
-                    if (price == null) {
-                        price = element.querySelector('.price');
-                    }
-                    price = price.innerText.replace(/[^0-9.]/g, '');
-                    price = parseFloat(price);
+    while (URL) {
+      await page.goto(URL);
 
-                    const shop = 'UCC';
+      console.log(`loaded page ${++pageCount}`)
 
-                    const url = element
-                        .querySelector('.name')
-                        .getElementsByTagName('a')[0].href;
+      const gpusFromPage = await page.evaluate(() => {
+        const elementNodeList = document.querySelectorAll('.product-thumb');
+        const elements = [...elementNodeList];
+        return elements.map((element) => {
+          const name = element.querySelector('.name').innerText;
 
-                    return { name, price, shop, url };
-                });
-            });
+          let price = element.querySelector('.price-new');
+          if (price == null) {
+            price = element.querySelector('.price');
+          }
+          price = price.innerText.replace(/[^0-9.]/g, '');
+          price = parseFloat(price);
 
-            gpus.push(...gpusFromPage);
+          const shop = 'UCC';
 
-            const nextPageUrl = await page.evaluate(() => {
-                const pagination = document.querySelector('.pagination');
-                const nextButton = pagination.querySelector('.next');
-                return nextButton ? nextButton.href : false;
-            });
+          const url = element
+            .querySelector('.name')
+            .getElementsByTagName('a')[0].href;
 
-            URL = nextPageUrl;
-        }
+          return { name, price, shop, url };
+        });
+      });
 
-        await browser.close();
+      gpus.push(...gpusFromPage);
 
-        console.log(`${gpus.length} GPU Listings Found in UCC`)
+      const nextPageUrl = await page.evaluate(() => {
+        const pagination = document.querySelector('.pagination');
+        const nextButton = pagination.querySelector('.next');
+        return nextButton ? nextButton.href : false;
+      });
 
-        return gpus;
+      URL = nextPageUrl;
     }
 
-    getPrintString(gpu) {
-        return `[${gpu.shop}] BDT ${gpu.price} - ${gpu.name} (${gpu.url})`;
+    await browser.close();
+
+    console.log(`${gpus.length} GPU Listings Found in UCC`)
+
+    return gpus;
+  }
+
+  getPrintString(gpu) {
+    return `[${gpu.shop}] BDT ${gpu.price} - ${gpu.name} (${gpu.url})`;
+  }
+
+  async getGpuData() {
+    const gpus = [];
+
+    try {
+      gpus.push(...(await this.getGPUsFromStarTech()));
+    }
+    catch (error) {
+      console.log(error);
     }
 
-    async getGpuData() {
-        const gpus = [];
-
-        try{
-            gpus.push(...(await this.getGPUsFromStarTech()));
-        } 
-        catch (error){
-            console.log(error);
-        }
-
-        try{
-            gpus.push(...(await this.getGPUsFromTechLand()));
-        }
-        catch (error){
-            console.log(error);
-        }
-
-        try{
-            gpus.push(...(await this.getGPUsFromUCC()));
-        }
-        catch (error){
-            console.log(error);
-        }
-
-        return gpus
-            .filter(x => x.price > 0)
-            .sort((a, b) => a.price - b.price);
+    try {
+      gpus.push(...(await this.getGPUsFromTechLand()));
     }
+    catch (error) {
+      console.log(error);
+    }
+
+    try {
+      gpus.push(...(await this.getGPUsFromUCC()));
+    }
+    catch (error) {
+      console.log(error);
+    }
+
+    return gpus
+      .filter(x => x.price > 0)
+      .sort((a, b) => a.price - b.price);
+  }
 }
 
 (async () => {
-    const gpuDataProvider = new GpuDataProvider();
-    const gpus = await gpuDataProvider.getGpuData();
+  const gpuDataProvider = new GpuDataProvider();
+  const gpus = await gpuDataProvider.getGpuData();
 
-    const csvWriter = createCsvWriter({
-        path: 'gpu-data.csv',
-        header: [
-            { id: 'name', title: 'Name' },
-            { id: 'price', title: 'Price (BDT)' },
-            { id: 'shop', title: 'Shop' },
-            { id: 'url', title: 'Link' },
-        ],
+  gpus.forEach(gpu => {
+    gpu.brand = getBrand(gpu.name);
+  })
+
+  const csvWriter = createCsvWriter({
+    path: 'gpu-data.csv',
+    header: [
+      { id: 'name', title: 'Name' },
+      { id: 'brand', title: 'Brand' },
+      { id: 'price', title: 'Price (BDT)' },
+      { id: 'shop', title: 'Shop' },
+      { id: 'url', title: 'Link' },
+    ],
+  });
+
+  csvWriter
+    .writeRecords(gpus) // returns a promise
+    .then(() => {
+      console.log('...Done Writing in CSV File "gpu-data.csv"');
     });
 
-    csvWriter
-        .writeRecords(gpus) // returns a promise
-        .then(() => {
-            console.log('...Done Writing in CSV File "gpu-data.csv"');
-        });
-
-    console.log(`Total ${gpus.length} GPU Listings Found`);
+  console.log(`Total ${gpus.length} GPU Listings Found`);
 })();
